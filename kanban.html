@@ -108,6 +108,56 @@
                 </div>
             </div>
 
+            <div class="kanban-toolbar">
+                <button class="btn-primary" onclick="abrirModalCadastro()">+ Nova Tarefa</button>
+            </div>
+
+            <!-- Modal de Cadastro -->
+            <div id="modalCadastro" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="modal-close" onclick="fecharModalCadastro()">&times;</span>
+                    <h3>Nova Tarefa Kanban</h3>
+                    <form id="formTarefa">
+                        <div class="form-group">
+                            <label>Título *</label>
+                            <input type="text" id="inputTitulo" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição</label>
+                            <textarea id="inputDescricao" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="inputStatus">
+                                <option value="a_fazer">A Fazer</option>
+                                <option value="fazendo">Em Produção</option>
+                                <option value="concluido">Concluído</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Responsável</label>
+                            <input type="text" id="inputResponsavel" placeholder="Nome do responsável">
+                        </div>
+                        <div class="form-group">
+                            <label>Prioridade</label>
+                            <select id="inputPrioridade">
+                                <option value="baixa">Baixa</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="alta">Alta</option>
+                                <option value="urgente">Urgente</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Vincular à Ordem de Produção</label>
+                            <select id="inputOrdem">
+                                <option value="">Nenhuma</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">Criar Tarefa</button>
+                    </form>
+                </div>
+            </div>
+
             <div class="kanban-container">
                 <div class="kanban-column" id="todo" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
                     <h3>A Fazer (PMP)</h3>
@@ -157,6 +207,79 @@
             return map[status] || status;
         }
 
+        // ========== MODAL DE CADASTRO ==========
+        async function abrirModalCadastro() {
+            document.getElementById('modalCadastro').style.display = 'flex';
+            document.getElementById('formTarefa').reset();
+            document.getElementById('inputOrdem').innerHTML = '<option value="">Nenhuma</option>';
+            
+            // Carregar ordens para vincular
+            try {
+                const ordens = await listarOrdens();
+                ordens.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.id;
+                    opt.textContent = `${o.numero} - ${o.produto_nome || 'Produto'}`;
+                    document.getElementById('inputOrdem').appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Erro ao carregar ordens:', e);
+            }
+        }
+
+        function fecharModalCadastro() {
+            document.getElementById('modalCadastro').style.display = 'none';
+        }
+
+        // Fechar modal clicando fora
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('modalCadastro');
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) fecharModalCadastro();
+            });
+        });
+
+        // Submit do formulário de cadastro
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('formTarefa').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const titulo = document.getElementById('inputTitulo').value.trim();
+                if (!titulo) {
+                    alert('O título é obrigatório.');
+                    return;
+                }
+
+                const dados = {
+                    titulo: titulo,
+                    descricao: document.getElementById('inputDescricao').value.trim(),
+                    status: document.getElementById('inputStatus').value,
+                    responsavel: document.getElementById('inputResponsavel').value.trim(),
+                    prioridade: document.getElementById('inputPrioridade').value,
+                    ordem_id: document.getElementById('inputOrdem').value || null
+                };
+
+                try {
+                    await criarTarefa(dados);
+                    fecharModalCadastro();
+                    renderKanban();
+                } catch (error) {
+                    alert('Erro ao criar tarefa: ' + error.message);
+                }
+            });
+        });
+
+        // ========== EXCLUIR TAREFA ==========
+        async function excluirTarefa(id) {
+            if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
+            try {
+                await deletarTarefa(id);
+                renderKanban();
+            } catch (error) {
+                alert('Erro ao excluir tarefa: ' + error.message);
+            }
+        }
+
         async function renderKanban() {
             document.querySelector("#todo .cards-area").innerHTML = "";
             document.querySelector("#progress .cards-area").innerHTML = "";
@@ -184,9 +307,14 @@
                 card.style.borderLeftColor = cores[colunaId] || '#64748b';
 
                 card.innerHTML = `
-                    <h5>${tarefa.titulo}</h5>
-                    <p>${tarefa.descricao || ''}</p>
-                    <p><small>Responsável: ${tarefa.responsavel || '-'} | Prioridade: ${tarefa.prioridade}</small></p>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <h5>${tarefa.titulo}</h5>
+                            <p>${tarefa.descricao || ''}</p>
+                            <p><small>Responsável: ${tarefa.responsavel || '-'} | Prioridade: ${tarefa.prioridade}</small></p>
+                        </div>
+                        <button class="btn-danger btn-sm" onclick="excluirTarefa(${tarefa.id})" style="margin-left: 10px;" title="Excluir tarefa">✕</button>
+                    </div>
                     <div class="drag-hint">☰ Arraste para mover</div>
                 `;
 
