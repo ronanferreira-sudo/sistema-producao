@@ -37,6 +37,10 @@ def servir_arquivos(filename):
     """Serve arquivos .html, .css e estáticos."""
     if filename.endswith('.html') or filename.endswith('.css'):
         return send_from_directory(BASE_DIR, filename)
+    # Se o caminho já começa com 'backend/static/', extrai só o nome do arquivo
+    static_prefix = 'backend/static/'
+    if filename.startswith(static_prefix):
+        filename = filename[len(static_prefix):]
     return send_from_directory(os.path.join(BASE_DIR, 'backend', 'static'), filename)
 
 
