@@ -13,9 +13,11 @@ class Config:
     """Configurações principais da aplicação."""
     
     # === Banco de Dados ===
+    # Por padrão usa SQLite (para facilitar desenvolvimento local)
+    # Para usar PostgreSQL, defina a variável de ambiente DATABASE_URL
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DATABASE_URL',
-        'postgresql://postgres:123@localhost:5432/grandprix'
+        'sqlite:///grandprix.db'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

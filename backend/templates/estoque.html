@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Estoque & Previsão</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .estoque-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
+        .card-painel { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-painel h3 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+        .tabela-dados { width: 100%; border-collapse: collapse; text-align: left; }
+        .tabela-dados th, .tabela-dados td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        .tabela-dados th { background-color: #f8fafc; color: #64748b; }
+        .badge-alerta { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-alerta.normal { background: #d1fae5; color: #065f46; }
+        .badge-alerta.ruptura { background: #fee2e2; color: #991b1b; }
+        .badge-alerta.excesso { background: #fef3c7; color: #92400e; }
+        .form-previsao { display: flex; flex-direction: column; gap: 15px; }
+        .btn-calcular { background: #2563eb; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-calcular:hover { background: #1d4ed8; }
+        .resultado-box { margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #2563eb; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        {% include 'sidebar.html' %}
+        <main class="main-content">
+            <div class="header-dashboard">
+                <div>
+                    <h2>Módulo de Gestão de Estoque & Previsão de Demanda</h2>
+                    <p>Monitore os níveis de saldo de componentes e calcule projeções utilizando médias móveis industriais.</p>
+                </div>
+            </div>
+
+            <div class="estoque-grid">
+                <div class="card-painel">
+                    <h3>Saldo Atual do Almoxarifado</h3>
+                    <table class="tabela-dados">
+                        <thead>
+                            <tr>
+                                <th>Componente / Insumo</th>
+                                <th>Qtd. em Saldo</th>
+                                <th>Status de Alerta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in produtos %}
+                            {% set alerta_classe = 'normal' %}
+                            {% set alerta_texto = 'Estável' %}
+                            {% if p.quantidade <= 0 %}
+                                {% set alerta_classe = 'ruptura' %}
+                                {% set alerta_texto = 'Sem Estoque' %}
+                            {% elif p.quantidade < 100 %}
+                                {% set alerta_classe = 'ruptura' %}
+                                {% set alerta_texto = 'Estoque Crítico' %}
+                            {% elif p.quantidade < 500 %}
+                                {% set alerta_classe = 'excesso' %}
+                                {% set alerta_texto = 'Estoque Baixo' %}
+                            {% elif p.quantidade > 5000 %}
+                                {% set alerta_classe = 'excesso' %}
+                                {% set alerta_texto = 'Excesso de Estoque' %}
+                            {% endif %}
+                            <tr>
+                                <td><strong>{{ p.codigo }}</strong> - {{ p.nome }}</td>
+                                <td>{{ p.quantidade }} un</td>
+                                <td><span class="badge-alerta {{ alerta_classe }}">{{ alerta_texto }}</span></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" style="text-align:center;color:#94a3b8;">Nenhum produto cadastrado no estoque.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-painel">
+                    <h3>Previsão por Média Móvel</h3>
+                    {% if previsao_resultado %}
+                    <div class="resultado-box">
+                        <strong style="color: #0f172a; font-size: 14px;">Demanda Projetada:</strong>
+                        <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #1e3a8a;">{{ previsao_resultado }} unidades</p>
+                    </div>
+                    {% endif %}
+                    <form action="/estoque" method="POST" class="form-previsao">
+                        <div class="form-group">
+                            <label>Mês 1 (Mais antigo):</label>
+                            <input type="number" name="m1" value="{{ m1 or 120 }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mês 2:</label>
+                            <input type="number" name="m2" value="{{ m2 or 145 }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mês 3 (Mais recente):</label>
+                            <input type="number" name="m3" value="{{ m3 or 160 }}" required>
+                        </div>
+                        <button type="submit" class="btn-calcular">Calcular Próximo Período</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

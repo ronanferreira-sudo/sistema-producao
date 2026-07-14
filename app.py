@@ -9,4 +9,6 @@ from backend.app import app
 
 # === Executa o servidor ===
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Para acessar de outras máquinas na rede, use host='0.0.0.0'
+    # Altere debug=False em produção
+    app.run(debug=True, host='0.0.0.0', port=5000)

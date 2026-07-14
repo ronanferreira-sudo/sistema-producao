@@ -1,136 +1,209 @@
-const API_URL = 'http://localhost:5000/api';
+// =============================================================================
+// SinaPCP - API Client (Funções para comunicação com o backend Flask)
+// =============================================================================
 
-async function apiRequest(endpoint, method = 'GET', data = null) {
-    const options = {
-        method,
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    };
+const API_BASE = 'http://localhost:5000';
 
-    if (data) {
-        options.body = JSON.stringify(data);
-    }
+// =============================================================================
+// AUTENTICAÇÃO
+// =============================================================================
 
-    try {
-        const response = await fetch(`${API_URL}${endpoint}`, options);
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.mensagem || 'Erro na requisição');
-        }
-
-        return result;
-    } catch (error) {
-        console.error(`Erro na requisição ${endpoint}:`, error);
-        throw error;
-    }
-}
-
-// ==================== AUTENTICAÇÃO ====================
 async function login(matricula, senha) {
-    return apiRequest('/login', 'POST', { matricula, senha });
+    const response = await fetch(`${API_BASE}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matricula, senha })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Credenciais inválidas.');
+    }
+    return await response.json();
 }
 
-// ==================== USUÁRIOS ====================
-async function listarUsuarios() {
-    return apiRequest('/usuarios');
+async function criarUsuario(dados) {
+    const response = await fetch(`${API_BASE}/api/cadastro`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao criar conta.');
+    }
+    return await response.json();
 }
 
-async function criarUsuario(usuario) {
-    return apiRequest('/usuarios', 'POST', usuario);
+// =============================================================================
+// DASHBOARD
+// =============================================================================
+
+async function carregarDashboard() {
+    const response = await fetch(`${API_BASE}/api/dashboard`);
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao carregar dashboard.');
+    }
+    return await response.json();
 }
 
-async function atualizarUsuario(id, usuario) {
-    return apiRequest(`/usuarios/${id}`, 'PUT', usuario);
-}
+// =============================================================================
+// PRODUTOS
+// =============================================================================
 
-async function deletarUsuario(id) {
-    return apiRequest(`/usuarios/${id}`, 'DELETE');
-}
-
-// ==================== PRODUTOS ====================
 async function listarProdutos() {
-    return apiRequest('/produtos');
+    const response = await fetch(`${API_BASE}/api/produtos`);
+    if (!response.ok) throw new Error('Erro ao listar produtos.');
+    return await response.json();
 }
 
-async function criarProduto(produto) {
-    return apiRequest('/produtos', 'POST', produto);
+async function criarProduto(dados) {
+    const response = await fetch(`${API_BASE}/api/produtos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao criar produto.');
+    }
+    return await response.json();
 }
 
-async function atualizarProduto(id, produto) {
-    return apiRequest(`/produtos/${id}`, 'PUT', produto);
+async function atualizarProduto(id, dados) {
+    const response = await fetch(`${API_BASE}/api/produtos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao atualizar produto.');
+    }
+    return await response.json();
 }
 
 async function deletarProduto(id) {
-    return apiRequest(`/produtos/${id}`, 'DELETE');
+    const response = await fetch(`${API_BASE}/api/produtos/${id}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao excluir produto.');
+    }
+    return await response.json();
 }
 
-// ==================== ORDENS DE PRODUÇÃO ====================
+// =============================================================================
+// ORDENS DE PRODUÇÃO
+// =============================================================================
+
 async function listarOrdens() {
-    return apiRequest('/ordens');
+    const response = await fetch(`${API_BASE}/api/ordens`);
+    if (!response.ok) throw new Error('Erro ao listar ordens.');
+    return await response.json();
 }
 
-async function criarOrdem(ordem) {
-    return apiRequest('/ordens', 'POST', ordem);
+async function criarOrdem(dados) {
+    const response = await fetch(`${API_BASE}/api/ordens`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao criar ordem.');
+    }
+    return await response.json();
 }
 
-async function atualizarOrdem(id, ordem) {
-    return apiRequest(`/ordens/${id}`, 'PUT', ordem);
+async function atualizarOrdem(id, dados) {
+    const response = await fetch(`${API_BASE}/api/ordens/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao atualizar ordem.');
+    }
+    return await response.json();
 }
 
 async function deletarOrdem(id) {
-    return apiRequest(`/ordens/${id}`, 'DELETE');
+    const response = await fetch(`${API_BASE}/api/ordens/${id}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao excluir ordem.');
+    }
+    return await response.json();
 }
 
-// ==================== TAREFAS KANBAN ====================
+// =============================================================================
+// TAREFAS KANBAN
+// =============================================================================
+
 async function listarTarefas() {
-    return apiRequest('/tarefas');
+    const response = await fetch(`${API_BASE}/api/tarefas`);
+    if (!response.ok) throw new Error('Erro ao listar tarefas.');
+    return await response.json();
 }
 
-async function criarTarefa(tarefa) {
-    return apiRequest('/tarefas', 'POST', tarefa);
+async function criarTarefa(dados) {
+    const response = await fetch(`${API_BASE}/api/tarefas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao criar tarefa.');
+    }
+    return await response.json();
 }
 
-async function atualizarTarefa(id, tarefa) {
-    return apiRequest(`/tarefas/${id}`, 'PUT', tarefa);
+async function atualizarTarefa(id, dados) {
+    const response = await fetch(`${API_BASE}/api/tarefas/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao atualizar tarefa.');
+    }
+    return await response.json();
 }
 
 async function deletarTarefa(id) {
-    return apiRequest(`/tarefas/${id}`, 'DELETE');
+    const response = await fetch(`${API_BASE}/api/tarefas/${id}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.erro || 'Erro ao excluir tarefa.');
+    }
+    return await response.json();
 }
 
-// ==================== KPIs ====================
+// =============================================================================
+// KPIs
+// =============================================================================
+
 async function listarKpis() {
-    return apiRequest('/kpis');
+    const response = await fetch(`${API_BASE}/api/kpis`);
+    if (!response.ok) throw new Error('Erro ao listar KPIs.');
+    return await response.json();
 }
 
-async function criarKpi(kpi) {
-    return apiRequest('/kpis', 'POST', kpi);
-}
+// =============================================================================
+// CRONOGRAMAS
+// =============================================================================
 
-async function atualizarKpi(id, kpi) {
-    return apiRequest(`/kpis/${id}`, 'PUT', kpi);
-}
-
-// ==================== CRONOGRAMAS ====================
 async function listarCronogramas() {
-    return apiRequest('/cronogramas');
-}
-
-async function criarCronograma(cronograma) {
-    return apiRequest('/cronogramas', 'POST', cronograma);
-}
-
-async function atualizarCronograma(id, cronograma) {
-    return apiRequest(`/cronogramas/${id}`, 'PUT', cronograma);
-}
-
-async function deletarCronograma(id) {
-    return apiRequest(`/cronogramas/${id}`, 'DELETE');
-}
-
-// ==================== DASHBOARD ====================
-async function carregarDashboard() {
-    return apiRequest('/dashboard');
+    const response = await fetch(`${API_BASE}/api/cronogramas`);
+    if (!response.ok) throw new Error('Erro ao listar cronogramas.');
+    return await response.json();
 }

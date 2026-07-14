@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash
 
 # === Dependências Internas ===
-from app import app, db
-from models import Usuario, Produto, OrdemProducao, TarefaKanban, Kpi, Cronograma
+from backend.app import app, db
+from backend.models import Usuario, Produto, OrdemProducao, TarefaKanban, Kpi, Cronograma
 
 def init_database():
     with app.app_context():

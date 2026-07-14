@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Produtos & Processos</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .grid-produtos { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .card-painel { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-painel h3 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+        .card-painel.full { grid-column: 1 / -1; }
+        .tabela-dados { width: 100%; border-collapse: collapse; text-align: left; }
+        .tabela-dados th, .tabela-dados td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        .tabela-dados th { background-color: #f8fafc; color: #64748b; }
+        .acoes-cell { white-space: nowrap; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        {% include 'sidebar.html' %}
+        <main class="main-content">
+            <div class="header-dashboard">
+                <div>
+                    <h2>Engenharia de Produtos & Roteiros de Processos</h2>
+                    <p>Cadastre, edite e gerencie os produtos da fábrica.</p>
+                </div>
+            </div>
+
+            <div class="grid-produtos">
+                <div class="card-painel">
+                    <h3>Cadastro de Produto</h3>
+                    <form action="/produtos/salvar" method="POST">
+                        <input type="hidden" name="produto_id" value="{{ produto_edit.id if produto_edit else '' }}">
+                        <div class="form-group">
+                            <label for="produtoCodigo">Código do Produto</label>
+                            <input type="text" id="produtoCodigo" name="codigo" placeholder="Ex: PROD-001" value="{{ produto_edit.codigo if produto_edit else '' }}" required {{ 'readonly' if produto_edit else '' }}>
+                        </div>
+                        <div class="form-group">
+                            <label for="produtoNome">Nome do Produto</label>
+                            <input type="text" id="produtoNome" name="nome" placeholder="Ex: Suporte Metálico" value="{{ produto_edit.nome if produto_edit else '' }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="produtoDescricao">Descrição</label>
+                            <input type="text" id="produtoDescricao" name="descricao" placeholder="Descrição do produto" value="{{ produto_edit.descricao if produto_edit else '' }}">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="produtoQuantidade">Quantidade em Estoque</label>
+                                <input type="number" id="produtoQuantidade" name="quantidade" placeholder="0" min="0" value="{{ produto_edit.quantidade if produto_edit else 0 }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="produtoPreco">Preço (R$)</label>
+                                <input type="number" id="produtoPreco" name="preco" placeholder="0.00" min="0" step="0.01" value="{{ produto_edit.preco if produto_edit else 0.0 }}">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-success">{{ 'Atualizar' if produto_edit else 'Salvar' }} Produto</button>
+                            {% if produto_edit %}
+                            <a href="/produtos" class="btn-danger" style="padding:10px 20px;text-decoration:none;display:inline-block;border-radius:4px;color:white;">Cancelar</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-painel">
+                    <h3>Produtos Cadastrados</h3>
+                    <table class="tabela-dados">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th>Preço</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in produtos %}
+                            <tr>
+                                <td><strong>{{ p.codigo }}</strong></td>
+                                <td>{{ p.nome }}</td>
+                                <td>{{ p.quantidade }} un</td>
+                                <td>R$ {{ "%.2f"|format(p.preco) }}</td>
+                                <td class="acoes-cell">
+                                    <a href="/produtos/{{ p.id }}/editar" class="btn-sm" style="background:#3b82f6;color:white;text-decoration:none;padding:5px 10px;border-radius:4px;">Editar</a>
+                                    <a href="/produtos/{{ p.id }}/excluir" class="btn-sm btn-danger" style="padding:5px 10px;text-decoration:none;border-radius:4px;color:white;" onclick="return confirm('Tem certeza?')">Excluir</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" style="text-align:center;color:#94a3b8;">Nenhum produto cadastrado.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

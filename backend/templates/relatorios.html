@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Relatórios & Logs</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .grid-relatorios { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px; }
+        .card-painel { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-painel h3 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+        .tabela-dados { width: 100%; border-collapse: collapse; text-align: left; }
+        .tabela-dados th, .tabela-dados td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        .tabela-dados th { background-color: #f8fafc; color: #64748b; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-badge.concluido { background: #d1fae5; color: #065f46; }
+        .status-badge.producao { background: #fff3cd; color: #856404; }
+        .status-badge.cancelado { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        {% include 'sidebar.html' %}
+        <main class="main-content">
+            <div class="header-dashboard">
+                <div>
+                    <h2>Relatórios & Logs de Produção</h2>
+                    <p>Histórico completo das ordens de produção.</p>
+                </div>
+            </div>
+
+            <div class="grid-relatorios">
+                <div class="card-painel">
+                    <h3>Histórico de Ordens de Produção</h3>
+                    <table class="tabela-dados">
+                        <thead>
+                            <tr>
+                                <th>OP</th>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th>Emissão</th>
+                                <th>Entrega</th>
+                                <th>Status</th>
+                                <th>Prioridade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for o in ordens %}
+                            {% set status_map = {'aberta': 'producao', 'produzindo': 'producao', 'finalizada': 'concluido', 'cancelada': 'cancelado'} %}
+                            {% set label_map = {'aberta': 'Aberta', 'produzindo': 'Produzindo', 'finalizada': 'Finalizada', 'cancelada': 'Cancelada'} %}
+                            <tr>
+                                <td><strong>{{ o.numero }}</strong></td>
+                                <td>{{ o.produto.nome if o.produto else '-' }}</td>
+                                <td>{{ o.quantidade }} un</td>
+                                <td>{{ o.data_emissao.strftime('%d/%m/%Y %H:%M') if o.data_emissao else '-' }}</td>
+                                <td>{{ o.data_entrega.strftime('%d/%m/%Y') if o.data_entrega else '-' }}</td>
+                                <td><span class="status-badge {{ status_map[o.status] }}">{{ label_map[o.status] }}</span></td>
+                                <td>{{ o.prioridade|capitalize }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" style="text-align:center;color:#94a3b8;">Nenhuma ordem encontrada.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

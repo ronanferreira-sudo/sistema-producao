@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Login</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Simulador PCP</h2>
+        <p>SAGA SENAI de Inovação</p>
+        
+        <!-- Formulário de Login -->
+        <form id="loginForm" action="/login" method="POST">
+            <h3>Entrar</h3>
+            {% if erro %}
+            <div class="alert alert-erro" style="background:#fee2e2;color:#991b1b;padding:10px;border-radius:4px;margin-bottom:15px;text-align:center;">{{ erro }}</div>
+            {% endif %}
+            {% if sucesso %}
+            <div class="alert alert-sucesso" style="background:#d1fae5;color:#065f46;padding:10px;border-radius:4px;margin-bottom:15px;text-align:center;">{{ sucesso }}</div>
+            {% endif %}
+            <div class="form-group">
+                <label for="perfil">Perfil de Acesso</label>
+                <select id="perfil" name="perfil" required>
+                    <option value="aluno">Aluno (Operador/Controlador)</option>
+                    <option value="instrutor">Instrutor (Administrador)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="matricula">Matrícula ou Usuário</label>
+                <input type="text" id="matricula" name="matricula" placeholder="Digite seu acesso" required>
+            </div>
+
+            <div class="form-group">
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Entrar no Sistema</button>
+            <p class="toggle-link">
+                Não tem conta? <a href="#" id="showCadastro">Cadastre-se</a>
+            </p>
+        </form>
+
+        <!-- Formulário de Cadastro -->
+        <form id="cadastroForm" action="/cadastro" method="POST" style="display: none;">
+            <h3>Cadastro</h3>
+            {% if erro_cadastro %}
+            <div class="alert alert-erro" style="background:#fee2e2;color:#991b1b;padding:10px;border-radius:4px;margin-bottom:15px;text-align:center;">{{ erro_cadastro }}</div>
+            {% endif %}
+            <div class="form-group">
+                <label for="cadPerfil">Perfil de Acesso</label>
+                <select id="cadPerfil" name="perfil" required>
+                    <option value="aluno">Aluno (Operador/Controlador)</option>
+                    <option value="instrutor">Instrutor (Administrador)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="cadNome">Nome Completo</label>
+                <input type="text" id="cadNome" name="nome" placeholder="Digite seu nome" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cadMatricula">Matrícula ou Usuário</label>
+                <input type="text" id="cadMatricula" name="matricula" placeholder="Crie seu usuário" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cadSenha">Senha</label>
+                <input type="password" id="cadSenha" name="senha" placeholder="Crie uma senha" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cadConfirmaSenha">Confirmar Senha</label>
+                <input type="password" id="cadConfirmaSenha" name="confirma_senha" placeholder="Confirme a senha" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Criar Conta</button>
+            <p class="toggle-link">
+                Já tem conta? <a href="#" id="showLogin">Fazer Login</a>
+            </p>
+        </form>
+    </div>
+
+    <script>
+        // ========== TOGGLE ENTRE LOGIN E CADASTRO ==========
+        document.getElementById('showCadastro').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('cadastroForm').style.display = 'block';
+        });
+
+        document.getElementById('showLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('cadastroForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        });
+
+        // ========== Mostrar cadastro se houve erro de cadastro ==========
+        {% if erro_cadastro %}
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('cadastroForm').style.display = 'block';
+        {% endif %}
+    </script>
+
+</body>
+</html>

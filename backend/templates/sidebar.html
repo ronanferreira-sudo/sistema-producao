@@ -1,0 +1,21 @@
+<nav class="sidebar">
+            <h3>Fábrica Didática</h3>
+            <ul>
+                <li><a href="/dashboard" class="{{ 'active' if active == 'dashboard' else '' }}">Visão Geral</a></li>
+                <li><a href="/produtos" class="{{ 'active' if active == 'produtos' else '' }}">Produtos & Processos</a></li>
+                <li><a href="/pmp" class="{{ 'active' if active == 'pmp' else '' }}">Plano Mestre (PMP)</a></li>
+                <li><a href="/ordens" class="{{ 'active' if active == 'ordens' else '' }}">Ordens de Produção</a></li>
+                {% if menu_crono %}
+                <li><a href="/cronoanalise" class="{{ 'active' if active == 'cronoanalise' else '' }}">Cronoanálise</a></li>
+                {% endif %}
+                <li><a href="/kanban" class="{{ 'active' if active == 'kanban' else '' }}">Balanceamento & Kanban</a></li>
+                <li><a href="/estoque" class="{{ 'active' if active == 'estoque' else '' }}">Estoque & Previsão</a></li>
+                {% if menu_relatorios %}
+                <li><a href="/relatorios" class="{{ 'active' if active == 'relatorios' else '' }}">Relatórios & Logs</a></li>
+                {% endif %}
+                {% if menu_kpis %}
+                <li><a href="/kpis" class="{{ 'active' if active == 'kpis' else '' }}">Indicadores (KPIs)</a></li>
+                {% endif %}
+                <li><a href="/logout">Sair ({{ usuario_nome }})</a></li>
+            </ul>
+        </nav>

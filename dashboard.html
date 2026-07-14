@@ -5,40 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SinaPCP - Visão Geral</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .grid-dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .card-kpi {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-top: 4px solid #2563eb;
-        }
-        .card-kpi h3 {
-            margin: 0;
-            font-size: 14px;
-            color: #64748b;
-            text-transform: uppercase;
-        }
-        .card-kpi p {
-            margin: 10px 0 0 0;
-            font-size: 28px;
-            font-weight: bold;
-            color: #0f172a;
-        }
-        .welcome-box {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
 
@@ -67,20 +33,20 @@
                 </div>
             </div>
 
-    <div class="grid-dashboard">
-                <div class="card-kpi" style="border-top-color: #3b82f6;">
+            <div class="grid-dashboard">
+                <div class="card-kpi kpi-blue">
                     <h3>Total Produtos</h3>
                     <p id="total-produtos">0</p>
                 </div>
-                <div class="card-kpi" style="border-top-color: #eab308;">
+                <div class="card-kpi kpi-yellow">
                     <h3>Ordens Abertas</h3>
                     <p id="ordens-abertas">0</p>
                 </div>
-                <div class="card-kpi" style="border-top-color: #10b981;">
+                <div class="card-kpi kpi-green">
                     <h3>Em Produção</h3>
                     <p id="ordens-produzindo">0</p>
                 </div>
-                <div class="card-kpi" style="border-top-color: #ef4444;">
+                <div class="card-kpi kpi-red">
                     <h3>Finalizadas</h3>
                     <p id="ordens-finalizadas">0</p>
                 </div>
@@ -103,7 +69,6 @@
                 if(document.getElementById('menu-kpis')) document.getElementById('menu-kpis').style.display = 'none';
             }
 
-            // Carregar dados do dashboard da API
             try {
                 const dados = await carregarDashboard();
                 document.getElementById('total-produtos').textContent = dados.total_produtos;

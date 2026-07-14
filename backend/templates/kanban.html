@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Balanceamento & Kanban</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .kanban-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
+        .kanban-column { background: #f1f5f9; border-radius: 8px; padding: 15px; min-height: 450px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .kanban-column h3 { text-align: center; margin-bottom: 15px; color: #1e293b; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .cards-area { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .kanban-card { background: white; border-radius: 6px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #3b82f6; }
+        .kanban-card h5 { margin: 0 0 5px 0; font-size: 15px; color: #0f172a; }
+        .kanban-card p { margin: 0 0 5px 0; font-size: 13px; color: #64748b; }
+        .kanban-card .acoes { margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
+        .kanban-card .acoes a { padding: 4px 8px; border-radius: 4px; font-size: 12px; text-decoration: none; color: white; }
+        .kanban-toolbar { margin-bottom: 15px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal-close { float: right; font-size: 24px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        {% include 'sidebar.html' %}
+        <main class="main-content">
+            <div class="header-dashboard">
+                <div>
+                    <h2>Quadro Visual de Sequenciamento de Ordens (Kanban)</h2>
+                    <p>Gerencie as tarefas do chão de fábrica.</p>
+                </div>
+            </div>
+
+            <div class="kanban-toolbar">
+                <a href="/kanban/novo" class="btn-primary" style="text-decoration:none;display:inline-block;">+ Nova Tarefa</a>
+            </div>
+
+            {% if mostrar_form %}
+            <div class="card-painel" style="background:white;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);margin-bottom:20px;">
+                <h3>Nova Tarefa Kanban</h3>
+                <form action="/kanban/salvar" method="POST">
+                    <div class="form-group">
+                        <label>Título *</label>
+                        <input type="text" name="titulo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea name="descricao" rows="3" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:4px;font-family:inherit;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select name="status">
+                            <option value="a_fazer">A Fazer</option>
+                            <option value="fazendo">Em Produção</option>
+                            <option value="concluido">Concluído</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Responsável</label>
+                        <input type="text" name="responsavel" placeholder="Nome do responsável">
+                    </div>
+                    <div class="form-group">
+                        <label>Prioridade</label>
+                        <select name="prioridade">
+                            <option value="baixa">Baixa</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Vincular à Ordem de Produção</label>
+                        <select name="ordem_id">
+                            <option value="">Nenhuma</option>
+                            {% for o in ordens %}
+                            <option value="{{ o.id }}">{{ o.numero }} - {{ o.produto.nome if o.produto else '' }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Criar Tarefa</button>
+                        <a href="/kanban" class="btn-danger" style="padding:10px 20px;text-decoration:none;display:inline-block;border-radius:4px;color:white;">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+
+            <div class="kanban-container">
+                <div class="kanban-column">
+                    <h3>A Fazer (PMP)</h3>
+                    <div class="cards-area">
+                        {% for t in tarefas if t.status == 'a_fazer' %}
+                        <div class="kanban-card" style="border-left-color: #64748b;">
+                            <h5>{{ t.titulo }}</h5>
+                            <p>{{ t.descricao or '' }}</p>
+                            <p><small>Responsável: {{ t.responsavel or '-' }} | Prioridade: {{ t.prioridade }}</small></p>
+                            <div class="acoes">
+                                <a href="/kanban/{{ t.id }}/mover/fazendo" style="background:#f59e0b;">→ Produção</a>
+                                <a href="/kanban/{{ t.id }}/excluir" style="background:#ef4444;" onclick="return confirm('Excluir tarefa?')">✕</a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p style="text-align:center;color:#94a3b8;padding:20px;">Nenhuma tarefa</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="kanban-column">
+                    <h3>Em Produção</h3>
+                    <div class="cards-area">
+                        {% for t in tarefas if t.status == 'fazendo' %}
+                        <div class="kanban-card" style="border-left-color: #f59e0b;">
+                            <h5>{{ t.titulo }}</h5>
+                            <p>{{ t.descricao or '' }}</p>
+                            <p><small>Responsável: {{ t.responsavel or '-' }} | Prioridade: {{ t.prioridade }}</small></p>
+                            <div class="acoes">
+                                <a href="/kanban/{{ t.id }}/mover/a_fazer" style="background:#64748b;">← Voltar</a>
+                                <a href="/kanban/{{ t.id }}/mover/concluido" style="background:#10b981;">→ Concluir</a>
+                                <a href="/kanban/{{ t.id }}/excluir" style="background:#ef4444;" onclick="return confirm('Excluir tarefa?')">✕</a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p style="text-align:center;color:#94a3b8;padding:20px;">Nenhuma tarefa</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="kanban-column">
+                    <h3>Concluído</h3>
+                    <div class="cards-area">
+                        {% for t in tarefas if t.status == 'concluido' %}
+                        <div class="kanban-card" style="border-left-color: #10b981;">
+                            <h5>{{ t.titulo }}</h5>
+                            <p>{{ t.descricao or '' }}</p>
+                            <p><small>Responsável: {{ t.responsavel or '-' }} | Prioridade: {{ t.prioridade }}</small></p>
+                            <div class="acoes">
+                                <a href="/kanban/{{ t.id }}/mover/fazendo" style="background:#f59e0b;">↩ Reabrir</a>
+                                <a href="/kanban/{{ t.id }}/excluir" style="background:#ef4444;" onclick="return confirm('Excluir tarefa?')">✕</a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p style="text-align:center;color:#94a3b8;padding:20px;">Nenhuma tarefa</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -5,43 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SinaPCP - Indicadores (KPIs)</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .grid-kpis {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .card-painel {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-top: 4px solid #2563eb;
-        }
-        .card-painel h3 {
-            margin-top: 0;
-            font-size: 14px;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 15px;
-        }
-        .valor-kpi {
-            font-size: 32px;
-            font-weight: bold;
-            color: #0f172a;
-            margin: 10px 0;
-        }
-        .meta-kpi {
-            font-size: 13px;
-            color: #10b981;
-            font-weight: 500;
-        }
-        .meta-kpi.atencao {
-            color: #f59e0b;
-        }
-    </style>
 </head>
 <body>
 
@@ -56,8 +19,8 @@
                 <li><a href="cronoanalise.html">Cronoanálise</a></li>
                 <li><a href="kanban.html">Balanceamento & Kanban</a></li>
                 <li><a href="estoque.html">Estoque & Previsão</a></li>
-                <li><a href="relatorios.html">Relatórios & Logs</a></li>
-                <li><a href="kpis.html" class="active">Indicadores (KPIs)</a></li>
+                <li id="menu-relatorios"><a href="relatorios.html">Relatórios & Logs</a></li>
+                <li id="menu-kpis"><a href="kpis.html" class="active">Indicadores (KPIs)</a></li>
                 <li><a href="index.html" onclick="localStorage.removeItem('userPerfil')">Sair</a></li>
             </ul>
         </nav>
@@ -79,6 +42,13 @@
     <script>
         document.addEventListener("DOMContentLoaded", async function() {
             const grid = document.getElementById('grid-kpis');
+
+            // Controle de perfil
+            const perfil = localStorage.getItem('userPerfil');
+            if (perfil === 'aluno') {
+                if(document.getElementById('menu-relatorios')) document.getElementById('menu-relatorios').style.display = 'none';
+                if(document.getElementById('menu-kpis')) document.getElementById('menu-kpis').style.display = 'none';
+            }
             
             try {
                 const kpis = await listarKpis();
@@ -116,14 +86,7 @@
                 });
             } catch (error) {
                 console.error('Erro ao carregar KPIs:', error);
-                grid.innerHTML = '<p>Erro ao carregar indicadores. Verifique se o servidor está rodando.</p>';
-            }
-        });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const perfil = localStorage.getItem('userPerfil');
-            if (perfil === 'aluno') {
+                grid.innerHTML = '<p class="erro-texto">Erro ao carregar indicadores. Verifique se o servidor está rodando.</p>';
             }
         });
     </script>

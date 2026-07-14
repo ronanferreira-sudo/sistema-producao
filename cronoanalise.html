@@ -5,40 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SinaPCP - Cronoanálise</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .grid-crono {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .card-painel {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .card-painel h3 {
-            margin-top: 0;
-            color: #1e293b;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        .tabela-dados {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-        .tabela-dados th, .tabela-dados td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .tabela-dados th {
-            background-color: #f8fafc;
-            color: #64748b;
-        }
-    </style>
 </head>
 <body>
 
@@ -53,8 +19,8 @@
                 <li><a href="cronoanalise.html" class="active">Cronoanálise</a></li>
                 <li><a href="kanban.html">Balanceamento & Kanban</a></li>
                 <li><a href="estoque.html">Estoque & Previsão</a></li>
-                <li><a href="relatorios.html">Relatórios & Logs</a></li>
-                <li><a href="kpis.html">Indicadores (KPIs)</a></li>
+                <li id="menu-relatorios"><a href="relatorios.html">Relatórios & Logs</a></li>
+                <li id="menu-kpis"><a href="kpis.html">Indicadores (KPIs)</a></li>
                 <li><a href="index.html" onclick="localStorage.removeItem('userPerfil')">Sair</a></li>
             </ul>
         </nav>
@@ -90,6 +56,13 @@
     <script src="backend/static/api.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", async function() {
+            // Controle de perfil
+            const perfil = localStorage.getItem('userPerfil');
+            if (perfil === 'aluno') {
+                if(document.getElementById('menu-relatorios')) document.getElementById('menu-relatorios').style.display = 'none';
+                if(document.getElementById('menu-kpis')) document.getElementById('menu-kpis').style.display = 'none';
+            }
+
             try {
                 const cronogramas = await listarCronogramas();
                 const tbody = document.getElementById('tabela-cronogramas');
@@ -101,10 +74,8 @@
                         <td>${new Date(c.data_inicio).toLocaleDateString('pt-BR')}</td>
                         <td>${new Date(c.data_fim).toLocaleDateString('pt-BR')}</td>
                         <td>
-                            <div style="background: #e2e8f0; border-radius: 4px; overflow: hidden;">
-                                <div style="background: ${c.cor}; width: ${c.progresso}%; height: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
-                                    ${c.progresso}%
-                                </div>
+                            <div class="progresso-bar">
+                                <div class="progresso-preenchido" style="background:${c.cor};width:${c.progresso}%;">${c.progresso}%</div>
                             </div>
                         </td>
                     `;
@@ -112,13 +83,6 @@
                 });
             } catch (error) {
                 console.error('Erro ao carregar cronogramas:', error);
-            }
-        });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const perfil = localStorage.getItem('userPerfil');
-            if (perfil === 'aluno') {
             }
         });
     </script>

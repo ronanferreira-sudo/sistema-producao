@@ -5,64 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SinaPCP - Plano Mestre</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .grid-pmp {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .card-painel {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .card-painel h3 {
-            margin-top: 0;
-            color: #1e293b;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        .form-pmp {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .form-group label {
-            font-size: 13px;
-            color: #475569;
-            font-weight: 500;
-        }
-        .form-group input {
-            padding: 8px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-        }
-        .btn-acao {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .btn-acao:hover { background: #1d4ed8; }
-        .box-calculo {
-            background: #f8fafc;
-            border-radius: 6px;
-            padding: 15px;
-            border-left: 4px solid #10b981;
-            display: none;
-        }
-    </style>
 </head>
 <body>
 
@@ -97,15 +39,15 @@
                     <div class="form-pmp">
                         <div class="form-group">
                             <label>Demanda do Período (unidades):</label>
-                            <input type="number" id="demanda" value="500">
+                            <input type="number" id="demanda" value="0">
                         </div>
                         <div class="form-group">
                             <label>Dias Úteis no Mês:</label>
-                            <input type="number" id="dias" value="22">
+                            <input type="number" id="dias" value="0">
                         </div>
                         <div class="form-group">
                             <label>Horas de Trabalho por Dia:</label>
-                            <input type="number" id="horas" value="8">
+                            <input type="number" id="horas" value="0">
                         </div>
                         <button class="btn-acao" onclick="calcularPMP()">Rodar Algoritmo PMP</button>
                     </div>
@@ -113,13 +55,13 @@
 
                 <div class="card-painel">
                     <h3>Resultados do Balanceamento</h3>
-                    <div id="sem-dados" style="color: #94a3b8; text-align: center; margin-top: 40px;">
+                    <div id="sem-dados" class="sem-dados">
                         Insira as variáveis e execute o cálculo.
                     </div>
-                    <div class="box-calculo" id="painel-resultados">
+                    <div class="box-calculo" id="painel-resultados" style="display:none;">
                         <p><strong>Tempo Total Disponível:</strong> <span id="res-tempo">0</span> horas/mês</p>
                         <p><strong>Takt Time Necessário:</strong> <span id="res-takt">0</span> minutos/unidade</p>
-                        <p style="font-size: 16px; margin-top: 15px; color: #065f46;"><strong>Meta de Produção Diária:</strong> <span id="res-meta" style="font-weight: bold;">0</span> un/dia</p>
+                        <p class="meta-destaque"><strong>Meta de Produção Diária:</strong> <span id="res-meta">0</span> un/dia</p>
                     </div>
                 </div>
             </div>
@@ -145,7 +87,6 @@
             document.getElementById('res-meta').innerText = Math.ceil(metaDiaria);
         }
 
-        // CONTROLE POR PERFIL
         document.addEventListener("DOMContentLoaded", function() {
             const perfil = localStorage.getItem('userPerfil');
             if (perfil === 'aluno') {
