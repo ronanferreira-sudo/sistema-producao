@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Produtos & Processos</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .grid-produtos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card-painel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .card-painel h3 {
+            margin-top: 0;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .card-painel.full {
+            grid-column: 1 / -1;
+        }
+        .tabela-dados {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .tabela-dados th, .tabela-dados td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .tabela-dados th {
+            background-color: #f8fafc;
+            color: #64748b;
+        }
+        .acoes-cell {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <nav class="sidebar">
+            <h3>Fábrica Didática</h3>
+            <ul>
+                <li><a href="dashboard.html">Visão Geral</a></li>
+                <li><a href="produtos.html" class="active">Produtos & Processos</a></li>
+                <li><a href="pmp.html">Plano Mestre (PMP)</a></li>
+                <li><a href="ordens.html">Ordens de Produção</a></li>
+                <li id="menu-crono"><a href="cronoanalise.html">Cronoanálise</a></li>
+                <li><a href="kanban.html">Balanceamento & Kanban</a></li>
+                <li><a href="estoque.html">Estoque & Previsão</a></li>
+                <li id="menu-relatorios"><a href="relatorios.html">Relatórios & Logs</a></li>
+                <li id="menu-kpis"><a href="kpis.html">Indicadores (KPIs)</a></li>
+                <li><a href="index.html" onclick="localStorage.removeItem('userPerfil')">Sair</a></li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <div class="header-dashboard">
+                <div>
+                    <h2>Engenharia de Produtos & Roteiros de Processos</h2>
+                    <p>Cadastre, edite e gerencie os produtos da fábrica.</p>
+                </div>
+            </div>
+
+            <div class="grid-produtos">
+                <div class="card-painel">
+                    <h3>Cadastro de Produto</h3>
+                    <form id="formProduto">
+                        <input type="hidden" id="produtoId" value="">
+                        <div class="form-group">
+                            <label for="produtoCodigo">Código do Produto</label>
+                            <input type="text" id="produtoCodigo" placeholder="Ex: PROD-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="produtoNome">Nome do Produto</label>
+                            <input type="text" id="produtoNome" placeholder="Ex: Suporte Metálico" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="produtoDescricao">Descrição</label>
+                            <input type="text" id="produtoDescricao" placeholder="Descrição do produto">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="produtoQuantidade">Quantidade em Estoque</label>
+                                <input type="number" id="produtoQuantidade" placeholder="0" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="produtoPreco">Preço (R$)</label>
+                                <input type="number" id="produtoPreco" placeholder="0.00" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-success" id="btnSalvarProduto">Salvar Produto</button>
+                            <button type="button" class="btn-danger" id="btnCancelarProduto" style="display:none;">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-painel">
+                    <h3>Produtos Cadastrados</h3>
+                    <table class="tabela-dados">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th>Preço</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-produtos">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="backend/static/api.js"></script>
+    <script>
+        let editandoProdutoId = null;
+
+        document.addEventListener("DOMContentLoaded", async function() {
+            const perfil = localStorage.getItem('userPerfil');
+            if (perfil === 'aluno') {
+                if(document.getElementById('menu-crono')) document.getElementById('menu-crono').style.display = 'none';
+                if(document.getElementById('menu-relatorios')) document.getElementById('menu-relatorios').style.display = 'none';
+                if(document.getElementById('menu-kpis')) document.getElementById('menu-kpis').style.display = 'none';
+            }
+            await carregarProdutos();
+        });
+
+        async function carregarProdutos() {
+            try {
+                const produtos = await listarProdutos();
+                const tbody = document.getElementById('tabela-produtos');
+                tbody.innerHTML = '';
+                produtos.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${p.codigo}</strong></td>
+                        <td>${p.nome}</td>
+                        <td>${p.quantidade} un</td>
+                        <td>R$ ${p.preco.toFixed(2)}</td>
+                        <td class="acoes-cell">
+                            <button class="btn-sm" style="background:#3b82f6;color:white;" onclick="editarProduto(${p.id})">Editar</button>
+                            <button class="btn-sm btn-danger" onclick="deletarProduto(${p.id})">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+            }
+        }
+
+        document.getElementById('formProduto').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const codigo = document.getElementById('produtoCodigo').value;
+            const nome = document.getElementById('produtoNome').value;
+            const descricao = document.getElementById('produtoDescricao').value;
+            const quantidade = parseInt(document.getElementById('produtoQuantidade').value) || 0;
+            const preco = parseFloat(document.getElementById('produtoPreco').value) || 0.0;
+
+            try {
+                if (editandoProdutoId) {
+                    await atualizarProduto(editandoProdutoId, { nome, descricao, quantidade, preco });
+                    alert('Produto atualizado com sucesso!');
+                } else {
+                    await criarProduto({ codigo, nome, descricao, quantidade, preco });
+                    alert('Produto cadastrado com sucesso!');
+                }
+                resetarFormulario();
+                await carregarProdutos();
+            } catch (error) {
+                alert('Erro ao salvar produto: ' + error.message);
+            }
+        });
+
+        document.getElementById('btnCancelarProduto').addEventListener('click', resetarFormulario);
+
+        function resetarFormulario() {
+            editandoProdutoId = null;
+            document.getElementById('formProduto').reset();
+            document.getElementById('produtoId').value = '';
+            document.getElementById('btnSalvarProduto').textContent = 'Salvar Produto';
+            document.getElementById('btnCancelarProduto').style.display = 'none';
+            document.getElementById('produtoCodigo').disabled = false;
+        }
+
+        async function editarProduto(id) {
+            try {
+                const produtos = await listarProdutos();
+                const p = produtos.find(x => x.id === id);
+                if (!p) return;
+
+                editandoProdutoId = id;
+                document.getElementById('produtoId').value = id;
+                document.getElementById('produtoCodigo').value = p.codigo;
+                document.getElementById('produtoCodigo').disabled = true;
+                document.getElementById('produtoNome').value = p.nome;
+                document.getElementById('produtoDescricao').value = p.descricao || '';
+                document.getElementById('produtoQuantidade').value = p.quantidade;
+                document.getElementById('produtoPreco').value = p.preco;
+                document.getElementById('btnSalvarProduto').textContent = 'Atualizar Produto';
+                document.getElementById('btnCancelarProduto').style.display = 'inline-block';
+            } catch (error) {
+                alert('Erro ao carregar produto: ' + error.message);
+            }
+        }
+
+        async function deletarProduto(id) {
+            if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+            try {
+                await deletarProduto(id);
+                await carregarProdutos();
+            } catch (error) {
+                alert('Erro ao excluir: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

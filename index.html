@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Simulador PCP</h2>
+        <p>SAGA SENAI de Inovação</p>
+        
+        <!-- Formulário de Login -->
+        <form id="loginForm">
+            <h3>Entrar</h3>
+            <div class="form-group">
+                <label for="perfil">Perfil de Acesso</label>
+                <select id="perfil" required>
+                    <option value="aluno">Aluno (Operador/Controlador)</option>
+                    <option value="instrutor">Instrutor (Administrador)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="matricula">Matrícula ou Usuário</label>
+                <input type="text" id="matricula" placeholder="Digite seu acesso" required>
+            </div>
+
+            <div class="form-group">
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Entrar no Sistema</button>
+            <p class="toggle-link">
+                Não tem conta? <a href="#" id="showCadastro">Cadastre-se</a>
+            </p>
+        </form>
+
+        <!-- Formulário de Cadastro -->
+        <form id="cadastroForm" style="display: none;">
+            <h3>Cadastro</h3>
+            <div class="form-group">
+                <label for="cadPerfil">Perfil de Acesso</label>
+                <select id="cadPerfil" required>
+                    <option value="aluno">Aluno (Operador/Controlador)</option>
+                    <option value="instrutor">Instrutor (Administrador)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="cadNome">Nome Completo</label>
+                <input type="text" id="cadNome" placeholder="Digite seu nome" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cadMatricula">Matrícula ou Usuário</label>
+                <input type="text" id="cadMatricula" placeholder="Crie seu usuário" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cadSenha">Senha</label>
+                <input type="password" id="cadSenha" placeholder="Crie uma senha" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cadConfirmaSenha">Confirmar Senha</label>
+                <input type="password" id="cadConfirmaSenha" placeholder="Confirme a senha" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Criar Conta</button>
+            <p class="toggle-link">
+                Já tem conta? <a href="#" id="showLogin">Fazer Login</a>
+            </p>
+        </form>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+        // ========== TOGGLE ENTRE LOGIN E CADASTRO ==========
+        document.getElementById('showCadastro').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('cadastroForm').style.display = 'block';
+        });
+
+        document.getElementById('showLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('cadastroForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        });
+
+        // ========== LOGIN ==========
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const matricula = document.getElementById('matricula').value;
+            const senha = document.getElementById('senha').value;
+            const perfil = document.getElementById('perfil').value;
+            
+            try {
+                const result = await login(matricula, senha);
+                if (result.usuario.perfil !== perfil) {
+                    alert('Perfil selecionado não corresponde ao perfil do usuário.');
+                    return;
+                }
+                localStorage.setItem('userPerfil', result.usuario.perfil);
+                localStorage.setItem('userNome', result.usuario.nome);
+                localStorage.setItem('userId', result.usuario.id);
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                alert('Erro ao fazer login: ' + error.message);
+            }
+        });
+
+        // ========== CADASTRO ==========
+        document.getElementById('cadastroForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const nome = document.getElementById('cadNome').value.trim();
+            const matricula = document.getElementById('cadMatricula').value.trim();
+            const senha = document.getElementById('cadSenha').value;
+            const confirmaSenha = document.getElementById('cadConfirmaSenha').value;
+            const perfil = document.getElementById('cadPerfil').value;
+
+            if (!nome || !matricula || !senha || !confirmaSenha) {
+                alert('Preencha todos os campos.');
+                return;
+            }
+
+            if (senha !== confirmaSenha) {
+                alert('As senhas não conferem.');
+                return;
+            }
+
+            if (senha.length < 4) {
+                alert('A senha deve ter pelo menos 4 caracteres.');
+                return;
+            }
+
+            try {
+                const result = await criarUsuario({
+                    nome: nome,
+                    matricula: matricula,
+                    senha: senha,
+                    perfil: perfil
+                });
+                alert('Conta criada com sucesso! Faça o login para continuar.');
+                // Volta para o formulário de login
+                document.getElementById('cadastroForm').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+                // Preenche os campos de login com os dados cadastrados
+                document.getElementById('matricula').value = matricula;
+                document.getElementById('perfil').value = perfil;
+            } catch (error) {
+                alert('Erro ao criar conta: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

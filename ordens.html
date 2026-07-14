@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Ordens de Produção</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .grid-ordens {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card-painel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .card-painel h3 {
+            margin-top: 0;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .card-painel.full {
+            grid-column: 1 / -1;
+        }
+        .tabela-dados {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .tabela-dados th, .tabela-dados td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .tabela-dados th {
+            background-color: #f8fafc;
+            color: #64748b;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-badge.concluido { background: #d1fae5; color: #065f46; }
+        .status-badge.producao { background: #fff3cd; color: #856404; }
+        .status-badge.cancelado { background: #fee2e2; color: #991b1b; }
+        .acoes-cell {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <nav class="sidebar">
+            <h3>Fábrica Didática</h3>
+            <ul>
+                <li><a href="dashboard.html">Visão Geral</a></li>
+                <li><a href="produtos.html">Produtos & Processos</a></li>
+                <li><a href="pmp.html">Plano Mestre (PMP)</a></li>
+                <li><a href="ordens.html" class="active">Ordens de Produção</a></li>
+                <li id="menu-crono"><a href="cronoanalise.html">Cronoanálise</a></li>
+                <li><a href="kanban.html">Balanceamento & Kanban</a></li>
+                <li><a href="estoque.html">Estoque & Previsão</a></li>
+                <li id="menu-relatorios"><a href="relatorios.html">Relatórios & Logs</a></li>
+                <li id="menu-kpis"><a href="kpis.html">Indicadores (KPIs)</a></li>
+                <li><a href="index.html" onclick="localStorage.removeItem('userPerfil')">Sair</a></li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <div class="header-dashboard">
+                <div>
+                    <h2>Sequenciamento de Ordens de Produção (OP)</h2>
+                    <p>Cadastre, edite e acompanhe as ordens de produção da fábrica.</p>
+                </div>
+            </div>
+
+            <div class="grid-ordens">
+                <div class="card-painel">
+                    <h3>Cadastro de Ordem de Produção</h3>
+                    <form id="formOrdem">
+                        <input type="hidden" id="ordemId" value="">
+                        <div class="form-group">
+                            <label for="ordemNumero">Número da OP</label>
+                            <input type="text" id="ordemNumero" placeholder="Ex: OP-2025-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ordemProduto">Produto</label>
+                            <select id="ordemProduto" required>
+                                <option value="">Selecione um produto...</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ordemQuantidade">Quantidade</label>
+                                <input type="number" id="ordemQuantidade" placeholder="0" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="ordemPrioridade">Prioridade</label>
+                                <select id="ordemPrioridade">
+                                    <option value="baixa">Baixa</option>
+                                    <option value="normal" selected>Normal</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="urgente">Urgente</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ordemDataEntrega">Data de Entrega</label>
+                            <input type="date" id="ordemDataEntrega">
+                        </div>
+                        <div class="form-group">
+                            <label for="ordemObservacoes">Observações</label>
+                            <textarea id="ordemObservacoes" rows="2" placeholder="Observações da ordem" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-success" id="btnSalvarOrdem">Emitir Ordem</button>
+                            <button type="button" class="btn-danger" id="btnCancelarOrdem" style="display:none;">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-painel">
+                    <h3>Ordens de Produção</h3>
+                    <table class="tabela-dados">
+                        <thead>
+                            <tr>
+                                <th>OP</th>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-ordens">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="backend/static/api.js"></script>
+    <script>
+        let editandoOrdemId = null;
+
+        document.addEventListener("DOMContentLoaded", async function() {
+            const perfil = localStorage.getItem('userPerfil');
+            if (perfil === 'aluno') {
+                if(document.getElementById('menu-crono')) document.getElementById('menu-crono').style.display = 'none';
+                if(document.getElementById('menu-relatorios')) document.getElementById('menu-relatorios').style.display = 'none';
+                if(document.getElementById('menu-kpis')) document.getElementById('menu-kpis').style.display = 'none';
+            }
+            await carregarProdutosSelect();
+            await carregarOrdens();
+        });
+
+        async function carregarProdutosSelect() {
+            try {
+                const produtos = await listarProdutos();
+                const select = document.getElementById('ordemProduto');
+                select.innerHTML = '<option value="">Selecione um produto...</option>';
+                produtos.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `${p.codigo} - ${p.nome}`;
+                    select.appendChild(opt);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+            }
+        }
+
+        async function carregarOrdens() {
+            try {
+                const ordens = await listarOrdens();
+                const tbody = document.getElementById('tabela-ordens');
+                tbody.innerHTML = '';
+                ordens.forEach(o => {
+                    const statusClass = {
+                        'aberta': 'producao',
+                        'produzindo': 'producao',
+                        'finalizada': 'concluido',
+                        'cancelada': 'cancelado'
+                    }[o.status] || '';
+
+                    const statusLabel = {
+                        'aberta': 'Aberta',
+                        'produzindo': 'Produzindo',
+                        'finalizada': 'Finalizada',
+                        'cancelada': 'Cancelada'
+                    }[o.status] || o.status;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${o.numero}</strong></td>
+                        <td>${o.produto_nome || '-'}</td>
+                        <td>${o.quantidade} un</td>
+                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        <td class="acoes-cell">
+                            <button class="btn-sm" style="background:#3b82f6;color:white;" onclick="editarOrdem(${o.id})">Editar</button>
+                            <button class="btn-sm btn-danger" onclick="deletarOrdem(${o.id})">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar ordens:', error);
+            }
+        }
+
+        document.getElementById('formOrdem').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const numero = document.getElementById('ordemNumero').value;
+            const produto_id = parseInt(document.getElementById('ordemProduto').value);
+            const quantidade = parseInt(document.getElementById('ordemQuantidade').value);
+            const prioridade = document.getElementById('ordemPrioridade').value;
+            const data_entrega = document.getElementById('ordemDataEntrega').value;
+            const observacoes = document.getElementById('ordemObservacoes').value;
+
+            if (!produto_id) {
+                alert('Selecione um produto!');
+                return;
+            }
+
+            const dados = { numero, produto_id, quantidade, prioridade, observacoes };
+            if (data_entrega) {
+                dados.data_entrega = new Date(data_entrega).toISOString();
+            }
+
+            try {
+                if (editandoOrdemId) {
+                    await atualizarOrdem(editandoOrdemId, dados);
+                    alert('Ordem atualizada com sucesso!');
+                } else {
+                    await criarOrdem(dados);
+                    alert('Ordem emitida com sucesso!');
+                }
+                resetarFormulario();
+                await carregarOrdens();
+            } catch (error) {
+                alert('Erro ao salvar ordem: ' + error.message);
+            }
+        });
+
+        document.getElementById('btnCancelarOrdem').addEventListener('click', resetarFormulario);
+
+        function resetarFormulario() {
+            editandoOrdemId = null;
+            document.getElementById('formOrdem').reset();
+            document.getElementById('ordemId').value = '';
+            document.getElementById('btnSalvarOrdem').textContent = 'Emitir Ordem';
+            document.getElementById('btnCancelarOrdem').style.display = 'none';
+            document.getElementById('ordemNumero').disabled = false;
+            document.getElementById('ordemPrioridade').value = 'normal';
+        }
+
+        async function editarOrdem(id) {
+            try {
+                const ordens = await listarOrdens();
+                const o = ordens.find(x => x.id === id);
+                if (!o) return;
+
+                editandoOrdemId = id;
+                document.getElementById('ordemId').value = id;
+                document.getElementById('ordemNumero').value = o.numero;
+                document.getElementById('ordemNumero').disabled = true;
+                document.getElementById('ordemProduto').value = o.produto_id;
+                document.getElementById('ordemQuantidade').value = o.quantidade;
+                document.getElementById('ordemPrioridade').value = o.prioridade;
+                document.getElementById('ordemObservacoes').value = o.observacoes || '';
+                if (o.data_entrega) {
+                    document.getElementById('ordemDataEntrega').value = o.data_entrega.split('T')[0];
+                }
+                document.getElementById('btnSalvarOrdem').textContent = 'Atualizar Ordem';
+                document.getElementById('btnCancelarOrdem').style.display = 'inline-block';
+            } catch (error) {
+                alert('Erro ao carregar ordem: ' + error.message);
+            }
+        }
+
+        async function deletarOrdem(id) {
+            if (!confirm('Tem certeza que deseja excluir esta ordem?')) return;
+            try {
+                await deletarOrdem(id);
+                await carregarOrdens();
+            } catch (error) {
+                alert('Erro ao excluir: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

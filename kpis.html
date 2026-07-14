@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Indicadores (KPIs)</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .grid-kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card-painel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-top: 4px solid #2563eb;
+        }
+        .card-painel h3 {
+            margin-top: 0;
+            font-size: 14px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }
+        .valor-kpi {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 10px 0;
+        }
+        .meta-kpi {
+            font-size: 13px;
+            color: #10b981;
+            font-weight: 500;
+        }
+        .meta-kpi.atencao {
+            color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <nav class="sidebar">
+            <h3>Fábrica Didática</h3>
+            <ul>
+                <li><a href="dashboard.html">Visão Geral</a></li>
+                <li><a href="produtos.html">Produtos & Processos</a></li>
+                <li><a href="pmp.html">Plano Mestre (PMP)</a></li>
+                <li><a href="ordens.html">Ordens de Produção</a></li>
+                <li><a href="cronoanalise.html">Cronoanálise</a></li>
+                <li><a href="kanban.html">Balanceamento & Kanban</a></li>
+                <li><a href="estoque.html">Estoque & Previsão</a></li>
+                <li><a href="relatorios.html">Relatórios & Logs</a></li>
+                <li><a href="kpis.html" class="active">Indicadores (KPIs)</a></li>
+                <li><a href="index.html" onclick="localStorage.removeItem('userPerfil')">Sair</a></li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <div class="header-dashboard">
+                <div>
+                    <h2>Indicadores de Desempenho Industrial (KPIs)</h2>
+                    <p>Métricas de performance para tomada de decisão estratégica no chão de fábrica.</p>
+                </div>
+            </div>
+
+            <div class="grid-kpis" id="grid-kpis">
+            </div>
+        </main>
+    </div>
+
+    <script src="backend/static/api.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function() {
+            const grid = document.getElementById('grid-kpis');
+            
+            try {
+                const kpis = await listarKpis();
+                grid.innerHTML = '';
+                
+                const cores = ['#10b981', '#2563eb', '#f59e0b', '#ef4444', '#8b5cf6'];
+                
+                kpis.forEach((kpi, index) => {
+                    const cor = cores[index % cores.length];
+                    const atingiuMeta = kpi.valor >= kpi.meta;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card-painel';
+                    card.style.borderTopColor = cor;
+                    
+                    let valorDisplay = kpi.valor;
+                    let metaDisplay = kpi.meta;
+                    if (kpi.unidade === '%') {
+                        valorDisplay = kpi.valor.toFixed(1) + '%';
+                        metaDisplay = kpi.meta.toFixed(1) + '%';
+                    } else {
+                        valorDisplay = kpi.valor.toFixed(1) + ' ' + kpi.unidade;
+                        metaDisplay = kpi.meta.toFixed(1) + ' ' + kpi.unidade;
+                    }
+                    
+                    card.innerHTML = `
+                        <h3>${kpi.nome}</h3>
+                        <div class="valor-kpi">${valorDisplay}</div>
+                        <div class="meta-kpi ${atingiuMeta ? '' : 'atencao'}">
+                            ${atingiuMeta ? '▲' : '●'} Meta: ${metaDisplay} (${kpi.periodo})
+                        </div>
+                    `;
+                    
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar KPIs:', error);
+                grid.innerHTML = '<p>Erro ao carregar indicadores. Verifique se o servidor está rodando.</p>';
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const perfil = localStorage.getItem('userPerfil');
+            if (perfil === 'aluno') {
+            }
+        });
+    </script>
+</body>
+</html>

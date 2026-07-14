@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinaPCP - Estoque & Previsão</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .estoque-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card-painel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .card-painel h3 {
+            margin-top: 0;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .tabela-dados {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .tabela-dados th, .tabela-dados td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .tabela-dados th {
+            background-color: #f8fafc;
+            color: #64748b;
+        }
+        .badge-alerta {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-alerta.normal { background: #d1fae5; color: #065f46; }
+        .badge-alerta.ruptura { background: #fee2e2; color: #991b1b; }
+        .badge-alerta.excesso { background: #fef3c7; color: #92400e; }
+        
+        .form-previsao {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group label {
+            font-size: 13px;
+            color: #475569;
+            font-weight: 500;
+        }
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+        }
+        .btn-calcular {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-calcular:hover { background: #1d4ed8; }
+        .resultado-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 4px solid #2563eb;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <nav class="sidebar">
+            <h3>Fábrica Didática</h3>
+            <ul>
+                <li><a href="dashboard.html">Visão Geral</a></li>
+                <li><a href="produtos.html">Produtos & Processos</a></li>
+                <li><a href="pmp.html">Plano Mestre (PMP)</a></li>
+                <li><a href="ordens.html">Ordens de Produção</a></li>
+                <li id="menu-crono"><a href="cronoanalise.html">Cronoanálise</a></li>
+                <li><a href="kanban.html">Balanceamento & Kanban</a></li>
+                <li><a href="estoque.html" class="active">Estoque & Previsão</a></li>
+                <li id="menu-relatorios"><a href="relatorios.html">Relatórios & Logs</a></li>
+                <li id="menu-kpis"><a href="kpis.html">Indicadores (KPIs)</a></li>
+                <li><a href="index.html" onclick="localStorage.removeItem('userPerfil')">Sair</a></li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <div class="header-dashboard">
+                <div>
+                    <h2>Módulo de Gestão de Estoque & Previsão de Demanda</h2>
+                    <p>Monitore os níveis de saldo de componentes e calcule projeções utilizando médias móveis industriais.</p>
+                </div>
+            </div>
+
+            <div class="estoque-grid">
+                <div class="card-painel">
+                    <h3>Saldo Atual do Almoxarifado</h3>
+                    <table class="tabela-dados">
+                        <thead>
+                            <tr>
+                                <th>Componente / Insumo</th>
+                                <th>Qtd. em Saldo</th>
+                                <th>Status de Alerta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-estoque">
+                            <tr><td colspan="3">Carregando dados do estoque...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-painel">
+                    <h3>Previsão por Média Móvel</h3>
+                    <div class="form-previsao">
+                        <div class="form-group">
+                            <label>Mês 1 (Mais antigo):</label>
+                            <input type="number" id="m1" value="120">
+                        </div>
+                        <div class="form-group">
+                            <label>Mês 2:</label>
+                            <input type="number" id="m2" value="145">
+                        </div>
+                        <div class="form-group">
+                            <label>Mês 3 (Mais recente):</label>
+                            <input type="number" id="m3" value="160">
+                        </div>
+                        <button class="btn-calcular" onclick="calcularPrevisao()">Calcular Próximo Período</button>
+                        
+                        <div class="resultado-box" id="resultado">
+                            <strong style="color: #0f172a; font-size: 14px;">Demanda Projetada:</strong>
+                            <p id="txt-resultado" style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #1e3a8a;"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="backend/static/api.js"></script>
+    <script>
+        function calcularPrevisao() {
+            const m1 = parseFloat(document.getElementById('m1').value) || 0;
+            const m2 = parseFloat(document.getElementById('m2').value) || 0;
+            const m3 = parseFloat(document.getElementById('m3').value) || 0;
+
+            const media = (m1 + m2 + m3) / 3;
+
+            document.getElementById('resultado').style.display = 'block';
+            document.getElementById('txt-resultado').innerText = Math.round(media) + " unidades";
+        }
+
+        function determinarAlerta(quantidade) {
+            if (quantidade <= 0) {
+                return { classe: 'ruptura', texto: 'Sem Estoque' };
+            } else if (quantidade < 100) {
+                return { classe: 'ruptura', texto: 'Estoque Crítico' };
+            } else if (quantidade < 500) {
+                return { classe: 'excesso', texto: 'Estoque Baixo' };
+            } else if (quantidade > 5000) {
+                return { classe: 'excesso', texto: 'Excesso de Estoque' };
+            } else {
+                return { classe: 'normal', texto: 'Estável' };
+            }
+        }
+
+        // REGRAS DE PERFIL E CARREGAMENTO DE DADOS REAIS
+        document.addEventListener("DOMContentLoaded", async function() {
+            const perfil = localStorage.getItem('userPerfil');
+            if (perfil === 'aluno') {
+                if(document.getElementById('menu-crono')) document.getElementById('menu-crono').style.display = 'none';
+                if(document.getElementById('menu-relatorios')) document.getElementById('menu-relatorios').style.display = 'none';
+                if(document.getElementById('menu-kpis')) document.getElementById('menu-kpis').style.display = 'none';
+            }
+
+            // Carregar produtos do banco de dados como estoque real
+            try {
+                const produtos = await listarProdutos();
+                const tbody = document.getElementById('tabela-estoque');
+                tbody.innerHTML = '';
+
+                if (produtos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3">Nenhum produto cadastrado no estoque.</td></tr>';
+                    return;
+                }
+
+                produtos.forEach(p => {
+                    const alerta = determinarAlerta(p.quantidade);
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${p.codigo}</strong> - ${p.nome}</td>
+                        <td>${p.quantidade} un</td>
+                        <td><span class="badge-alerta ${alerta.classe}">${alerta.texto}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar estoque:', error);
+                document.getElementById('tabela-estoque').innerHTML = 
+                    '<tr><td colspan="3" style="color:#ef4444;">Erro ao carregar dados do estoque.</td></tr>';
+            }
+        });
+    </script>
+</body>
+</html>
