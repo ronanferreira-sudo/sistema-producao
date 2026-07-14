@@ -1,6 +1,12 @@
+# =============================================================================
+# SinaPCP - Modelos do Banco de Dados
+# =============================================================================
+
+# === Dependências Externas ===
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
+# === Instância do Banco de Dados ===
 db = SQLAlchemy()
 
 class Usuario(db.Model):

@@ -1,13 +1,17 @@
-"""
-Script para inicializar o banco de dados PostgreSQL com dados de exemplo.
-Execute apenas uma vez para criar as tabelas e popular com dados iniciais.
+# =============================================================================
+# SinaPCP - Inicialização do Banco de Dados
+# =============================================================================
+# Script para criar as tabelas e popular com dados de exemplo.
+# Uso: python backend/init_db.py
+# =============================================================================
 
-Uso: python init_db.py
-"""
+# === Dependências Externas ===
+from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash
+
+# === Dependências Internas ===
 from app import app, db
 from models import Usuario, Produto, OrdemProducao, TarefaKanban, Kpi, Cronograma
-from werkzeug.security import generate_password_hash
-from datetime import datetime, timedelta
 
 def init_database():
     with app.app_context():

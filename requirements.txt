@@ -1,0 +1,16 @@
+# =============================================================================
+# Dependências do Sistema SinaPCP - Fábrica Didática
+# =============================================================================
+# Instalação: pip install -r requirements.txt
+# =============================================================================
+
+# --- Framework Web ---
+Flask==3.0.0
+
+# --- Extensões Flask ---
+Flask-CORS==4.0.0
+Flask-SQLAlchemy==3.1.1
+
+# --- Utilitários ---
+Werkzeug==3.0.1
+python-dotenv==1.0.0
